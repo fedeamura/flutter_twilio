@@ -1,0 +1,67 @@
+group 'com.dormmom.flutter_twilio_voice'
+version '1.0-SNAPSHOT'
+
+
+buildscript {
+    ext.kotlin_version = '1.6.10'
+    ext.versions = [
+            'java'                  : JavaVersion.VERSION_1_8,
+            'voiceAndroid'          : '5.8.0',
+            'audioSwitch'           : '1.1.2',
+            'firebase'              : '17.6.0',
+            'firebaseMessaging'     : '23.0.0'
+    ]
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.1.3'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        jcenter()
+
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileOptions {
+        sourceCompatibility versions.java
+        targetCompatibility versions.java
+    }
+    compileSdkVersion 30
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+    defaultConfig {
+        minSdkVersion 21
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:26.0.0')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "com.twilio:audioswitch:${versions.audioSwitch}"
+    implementation "com.twilio:voice-android:${versions.voiceAndroid}"
+    implementation "com.google.firebase:firebase-messaging:${versions.firebaseMessaging}"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    //implementation files('app/libs/flutter.jar')
+}
