@@ -2,15 +2,15 @@
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html
 #
 Pod::Spec.new do |s|
-  s.name             = 'flutter_twilio_voice'
-  s.version          = '0.0.2'
+  s.name             = 'flutter_twilio'
+  s.version          = '0.0.1'
   s.summary          = 'Provides an interface to Twilio&#x27;s Programmable Voice SDK to allows adding voice-over-IP (VoIP) calling into your Flutter applications.'
   s.description      = <<-DESC
 Provides an interface to Twilio&#x27;s Programmable Voice SDK to allows adding voice-over-IP (VoIP) calling into your Flutter applications.
                        DESC
-  s.homepage         = 'https://dormmom.com'
+  s.homepage         = 'https://github.com/fedeamura/flutter_twilio'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Emmanuel Oche' => 'eopeter@gmail.com' }
+  s.author           = { 'Federico Amura' => 'fede.amura@gmail.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'

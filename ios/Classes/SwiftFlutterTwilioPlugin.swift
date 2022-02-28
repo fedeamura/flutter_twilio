@@ -5,7 +5,7 @@ import PushKit
 import TwilioVoice
 import CallKit
 
-public class SwiftFlutterTwilioVoicePlugin: NSObject, FlutterPlugin,   NotificationDelegate, AVAudioPlayerDelegate {
+public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDelegate, AVAudioPlayerDelegate {
         
     var deviceTokenString: Data?
     var callTo: String = ""
@@ -53,7 +53,7 @@ public class SwiftFlutterTwilioVoicePlugin: NSObject, FlutterPlugin,   Notificat
         }
         
         channel = FlutterMethodChannel(
-            name: "flutter_twilio_voice_response",
+            name: "flutter_twilio_response",
             binaryMessenger: controller.binaryMessenger
         )
         
@@ -66,8 +66,8 @@ public class SwiftFlutterTwilioVoicePlugin: NSObject, FlutterPlugin,   Notificat
     
     
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let instance = SwiftFlutterTwilioVoicePlugin()
-        let methodChannel = FlutterMethodChannel(name: "flutter_twilio_voice", binaryMessenger: registrar.messenger())
+        let instance = SwiftFlutterTwilioPlugin()
+        let methodChannel = FlutterMethodChannel(name: "flutter_twilio", binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(instance, channel: methodChannel)
     }
     
@@ -576,7 +576,7 @@ public class SwiftFlutterTwilioVoicePlugin: NSObject, FlutterPlugin,   Notificat
 
 
 // MARK: PKPushRegistryDelegate
-extension SwiftFlutterTwilioVoicePlugin : PKPushRegistryDelegate {
+extension SwiftFlutterTwilioPlugin : PKPushRegistryDelegate {
     
     public func pushRegistry(_ registry: PKPushRegistry, didUpdate credentials: PKPushCredentials, for type: PKPushType) {
         NSLog("pushRegistry:didUpdatePushCredentials:forType:")
@@ -644,7 +644,7 @@ extension SwiftFlutterTwilioVoicePlugin : PKPushRegistryDelegate {
  Call provider delegate
  // MARK: CXProviderDelegate
  */
-extension SwiftFlutterTwilioVoicePlugin : CXProviderDelegate {
+extension SwiftFlutterTwilioPlugin : CXProviderDelegate {
     
     public func providerDidReset(_ provider: CXProvider) {
         NSLog("providerDidReset:")
@@ -734,7 +734,7 @@ extension SwiftFlutterTwilioVoicePlugin : CXProviderDelegate {
  Call state delegate
  // MARK: TVOCallDelegate
  */
-extension SwiftFlutterTwilioVoicePlugin : CallDelegate {
+extension SwiftFlutterTwilioPlugin : CallDelegate {
     
     public func callDidStartRinging(call: Call) {
         NSLog("callDidStartRinging:")

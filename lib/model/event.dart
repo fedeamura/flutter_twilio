@@ -1,9 +1,9 @@
-import 'package:flutter_twilio_voice/model/call.dart';
-import 'package:flutter_twilio_voice/model/type.dart';
+import 'call.dart';
+import 'status.dart';
 
-class FlutterTwilioVoiceEvent {
-  final FlutterTwilioVoiceEventStatus type;
-  final FlutterTwilioVoiceCall? call;
+class FlutterTwilioEvent {
+  final FlutterTwilioStatus status;
+  final FlutterTwilioCall? call;
 
-  FlutterTwilioVoiceEvent(this.type, this.call);
+  FlutterTwilioEvent(this.status, this.call);
 }

@@ -1,4 +1,4 @@
-package com.dormmom.flutter_twilio_voice.Utils;
+package federico.amura.flutter_twilio.Utils;
 
 import static android.content.Context.AUDIO_SERVICE;
 
@@ -9,7 +9,8 @@ import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 
-import com.dormmom.flutter_twilio_voice.R;
+import federico.amura.flutter_twilio.R;
+
 
 public class SoundUtils {
     private boolean playing = false;

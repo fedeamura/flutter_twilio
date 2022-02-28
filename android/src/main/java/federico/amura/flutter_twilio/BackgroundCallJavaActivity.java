@@ -1,4 +1,4 @@
-package com.dormmom.flutter_twilio_voice;
+package federico.amura.flutter_twilio;
 
 import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
@@ -29,9 +29,6 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.widget.ImageViewCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.dormmom.flutter_twilio_voice.Utils.PreferencesUtils;
-import com.dormmom.flutter_twilio_voice.Utils.TwilioConstants;
-import com.dormmom.flutter_twilio_voice.Utils.TwilioUtils;
 import com.squareup.picasso.Picasso;
 import com.twilio.voice.Call;
 import com.twilio.voice.CallException;
@@ -40,6 +37,10 @@ import com.twilio.voice.CallInvite;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import federico.amura.flutter_twilio.Utils.PreferencesUtils;
+import federico.amura.flutter_twilio.Utils.TwilioConstants;
+import federico.amura.flutter_twilio.Utils.TwilioUtils;
 
 public class BackgroundCallJavaActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -296,8 +297,6 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
         this.callInvite.reject(this);
         this.close();
     }
-
-
 
 
     private void hangUp() {

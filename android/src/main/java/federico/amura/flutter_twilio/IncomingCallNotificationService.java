@@ -1,4 +1,4 @@
-package com.dormmom.flutter_twilio_voice;
+package federico.amura.flutter_twilio;
 
 import android.app.KeyguardManager;
 import android.app.Notification;
@@ -10,12 +10,13 @@ import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.dormmom.flutter_twilio_voice.Utils.NotificationUtils;
-import com.dormmom.flutter_twilio_voice.Utils.SoundUtils;
-import com.dormmom.flutter_twilio_voice.Utils.TwilioConstants;
-import com.dormmom.flutter_twilio_voice.Utils.TwilioUtils;
 import com.twilio.voice.CallInvite;
 import com.twilio.voice.CancelledCallInvite;
+
+import federico.amura.flutter_twilio.Utils.NotificationUtils;
+import federico.amura.flutter_twilio.Utils.SoundUtils;
+import federico.amura.flutter_twilio.Utils.TwilioConstants;
+import federico.amura.flutter_twilio.Utils.TwilioUtils;
 
 public class IncomingCallNotificationService extends Service {
 
@@ -103,15 +104,7 @@ public class IncomingCallNotificationService extends Service {
         if (cancelledCallInvite.getFrom() == null) return;
 
         Log.i(TAG, "From: " + cancelledCallInvite.getFrom() + ". To: " + cancelledCallInvite.getTo());
-
         this.informAppCancelCall();
-
-//        // Create missed call notification
-//        Notification notification = NotificationUtils.createMissingCallNotification(
-//                getApplicationContext(),
-//                cancelledCallInvite.getFrom()
-//        );
-//        NotificationUtils.notify(getApplicationContext(), TwilioConstants.NOTIFICATION_MISSED_CALL, notification);
     }
 
     private void startServiceIncomingCall(CallInvite callInvite) {

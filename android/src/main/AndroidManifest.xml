@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.dormmom.flutter_twilio_voice">
+    package="federico.amura.flutter_twilio">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
@@ -8,11 +8,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
-
-    <application android:name="com.dormmom.flutter_twilio_voice.App">
+    <application android:name="federico.amura.flutter_twilio.App">
 
         <activity
-            android:name="com.dormmom.flutter_twilio_voice.BackgroundCallJavaActivity"
+            android:name="federico.amura.flutter_twilio.BackgroundCallJavaActivity"
             android:excludeFromRecents="true"
             android:screenOrientation="portrait"
             android:showOnLockScreen="true"
@@ -29,7 +28,7 @@
         </activity>
 
         <service
-            android:name="com.dormmom.flutter_twilio_voice.IncomingCallNotificationService"
+            android:name="federico.amura.flutter_twilio.IncomingCallNotificationService"
             android:enabled="true"
             android:exported="false" />
 

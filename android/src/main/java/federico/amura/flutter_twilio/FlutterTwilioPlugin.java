@@ -1,4 +1,4 @@
-package com.dormmom.flutter_twilio_voice;
+package federico.amura.flutter_twilio;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,10 +9,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.dormmom.flutter_twilio_voice.Utils.PreferencesUtils;
-import com.dormmom.flutter_twilio_voice.Utils.TwilioConstants;
-import com.dormmom.flutter_twilio_voice.Utils.TwilioRegistrationListener;
-import com.dormmom.flutter_twilio_voice.Utils.TwilioUtils;
 import com.twilio.voice.Call;
 import com.twilio.voice.CallException;
 import com.twilio.voice.CallInvite;
@@ -20,6 +16,10 @@ import com.twilio.voice.CallInvite;
 import java.util.Map;
 import java.util.Set;
 
+import federico.amura.flutter_twilio.Utils.PreferencesUtils;
+import federico.amura.flutter_twilio.Utils.TwilioConstants;
+import federico.amura.flutter_twilio.Utils.TwilioRegistrationListener;
+import federico.amura.flutter_twilio.Utils.TwilioUtils;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -29,27 +29,27 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
 
-public class FlutterTwilioVoicePlugin implements
+public class FlutterTwilioPlugin implements
         FlutterPlugin,
         MethodChannel.MethodCallHandler,
         ActivityAware,
         PluginRegistry.NewIntentListener {
 
-    private static final String TAG = "TwilioVoicePlugin";
+    private static final String TAG = "FlutterTwilioPlugin";
 
     private Context context;
     private MethodChannel responseChannel;
     private CustomBroadcastReceiver broadcastReceiver;
     private boolean broadcastReceiverRegistered = false;
 
-    public FlutterTwilioVoicePlugin() {
+    public FlutterTwilioPlugin() {
     }
 
     private void setupMethodChannel(BinaryMessenger messenger, Context context) {
         this.context = context;
-        MethodChannel channel = new MethodChannel(messenger, "flutter_twilio_voice");
+        MethodChannel channel = new MethodChannel(messenger, "flutter_twilio");
         channel.setMethodCallHandler(this);
-        this.responseChannel = new MethodChannel(messenger, "flutter_twilio_voice_response");
+        this.responseChannel = new MethodChannel(messenger, "flutter_twilio_response");
     }
 
     private void registerReceiver() {
@@ -111,12 +111,9 @@ public class FlutterTwilioVoicePlugin implements
             String action = intent.getAction();
             Log.i(TAG, "onReceive. Action: " + action);
 
-            switch (action) {
-                case TwilioConstants.ACTION_ACCEPT: {
-                    CallInvite callInvite = intent.getParcelableExtra(TwilioConstants.EXTRA_INCOMING_CALL_INVITE);
-                    answer(callInvite);
-                }
-                break;
+            if (TwilioConstants.ACTION_ACCEPT.equals(action)) {
+                CallInvite callInvite = intent.getParcelableExtra(TwilioConstants.EXTRA_INCOMING_CALL_INVITE);
+                answer(callInvite);
             }
         }
     }
@@ -325,9 +322,9 @@ public class FlutterTwilioVoicePlugin implements
 
     private static class CustomBroadcastReceiver extends BroadcastReceiver {
 
-        private final FlutterTwilioVoicePlugin plugin;
+        private final FlutterTwilioPlugin plugin;
 
-        private CustomBroadcastReceiver(FlutterTwilioVoicePlugin plugin) {
+        private CustomBroadcastReceiver(FlutterTwilioPlugin plugin) {
             this.plugin = plugin;
         }
 

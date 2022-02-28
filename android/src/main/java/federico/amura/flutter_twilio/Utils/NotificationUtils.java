@@ -1,4 +1,4 @@
-package com.dormmom.flutter_twilio_voice.Utils;
+package federico.amura.flutter_twilio.Utils;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -14,10 +14,11 @@ import android.os.Bundle;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.dormmom.flutter_twilio_voice.BackgroundCallJavaActivity;
-import com.dormmom.flutter_twilio_voice.IncomingCallNotificationService;
-import com.dormmom.flutter_twilio_voice.R;
 import com.twilio.voice.CallInvite;
+
+import federico.amura.flutter_twilio.BackgroundCallJavaActivity;
+import federico.amura.flutter_twilio.IncomingCallNotificationService;
+import federico.amura.flutter_twilio.R;
 
 public class NotificationUtils {
 
@@ -103,42 +104,6 @@ public class NotificationUtils {
         return builder.build();
     }
 
-//    public static Notification createMissingCallNotification(Context context, String from) {
-//        String displayName = PreferencesUtils.getInstance(context).findContactName(from);
-//        if (displayName == null || displayName.trim().equals("")) {
-//            displayName = from;
-//        }
-//
-//        String notificationTitle = context.getString(R.string.notification_missed_call_title);
-//        String notificationText = context.getString(R.string.notification_missed_call_text, displayName);
-//
-//        // Return call intent
-//        Intent returnCallIntent = new Intent(context, IncomingCallNotificationService.class);
-//        returnCallIntent.setAction(TwilioConstants.ACTION_RETURN_CALL);
-//        returnCallIntent.putExtra(TwilioConstants.EXTRA_CALL_TO, from);
-//        @SuppressLint("UnspecifiedImmutableFlag")
-//        PendingIntent piReturnCallIntent = PendingIntent.getService(
-//                context,
-//                0,
-//                returnCallIntent,
-//                PendingIntent.FLAG_UPDATE_CURRENT
-//        );
-//
-//
-//        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, createChannel(context, true));
-//        builder.setSmallIcon(R.drawable.ic_phone_call);
-//        builder.setContentTitle(notificationTitle);
-//        builder.setContentText(notificationText);
-//        builder.setCategory(NotificationCompat.CATEGORY_CALL);
-//        builder.setAutoCancel(true);
-//        builder.setPriority(NotificationCompat.PRIORITY_HIGH);
-//        builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-//        builder.addAction(android.R.drawable.ic_menu_call, context.getString(R.string.btn_call_back), piReturnCallIntent);
-//        builder.setContentIntent(piReturnCallIntent);
-//        builder.setColor(Color.rgb(20, 10, 200));
-//        return builder.build();
-//    }
-
     private static String createChannel(Context context, boolean highPriority) {
         String id = highPriority ? TwilioConstants.VOICE_CHANNEL_HIGH_IMPORTANCE : TwilioConstants.VOICE_CHANNEL_LOW_IMPORTANCE;
 
@@ -165,10 +130,6 @@ public class NotificationUtils {
 
         return id;
     }
-
-//    public static void notify(Context context, int id, Notification notification) {
-//        NotificationManagerCompat.from(context).notify(id, notification);
-//    }
 
     public static void cancel(Context context, int id) {
         NotificationManagerCompat.from(context).cancel(id);

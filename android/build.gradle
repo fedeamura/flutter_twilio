@@ -1,6 +1,5 @@
-group 'com.dormmom.flutter_twilio_voice'
+group 'federico.amura.flutter_twilio'
 version '1.0-SNAPSHOT'
-
 
 buildscript {
     ext.kotlin_version = '1.6.10'
