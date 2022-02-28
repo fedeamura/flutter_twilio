@@ -1,8 +1,12 @@
+import 'package:flutter_twilio/flutter_twilio.dart';
+import 'package:flutter_twilio/model/status.dart';
+
 class FlutterTwilioCall {
   final String id;
   final String to;
   final String toDisplayName;
   final String toPhotoURL;
+  final FlutterTwilioStatus status;
   final bool mute;
   final bool speaker;
 
@@ -13,6 +17,7 @@ class FlutterTwilioCall {
     required this.id,
     required this.mute,
     required this.speaker,
+    required this.status,
   });
 
   factory FlutterTwilioCall.fromMap(Map<String, dynamic> data) {
@@ -22,6 +27,7 @@ class FlutterTwilioCall {
       toDisplayName: data["toDisplayName"] ?? "",
       toPhotoURL: data["toPhotoURL"] ?? "",
       mute: data["mute"] ?? false,
+      status: FlutterTwilio.getEventType(data["status"] ?? ""),
       speaker: data["speaker"] ?? false,
     );
   }
