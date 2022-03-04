@@ -8,10 +8,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
-    <application android:name="federico.amura.flutter_twilio.App">
-
+    <application>
         <activity
             android:name="federico.amura.flutter_twilio.BackgroundCallJavaActivity"
+            android:exported="true"
             android:excludeFromRecents="true"
             android:screenOrientation="portrait"
             android:showOnLockScreen="true"

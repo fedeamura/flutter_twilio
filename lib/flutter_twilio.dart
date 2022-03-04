@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'model/call.dart';
@@ -138,5 +141,41 @@ class FlutterTwilio {
         "defaultDisplayName": defaultDisplayName,
       },
     );
+  }
+
+  static Future<void> setAndroidCallStyle({
+    String? backgroundColor,
+    String? textColor,
+    String? buttonColor,
+    String? buttonIconColor,
+    String? buttonFocusColor,
+    String? buttonFocusIconColor,
+  }) async {
+    if (kIsWeb) return;
+    if (!Platform.isAndroid) return;
+
+    await _channel.invokeMethod(
+      'setCallStyle',
+      {
+        "backgroundColor": backgroundColor,
+        "textColor": textColor,
+        "buttonColor": buttonColor,
+        "buttonIconColor": buttonIconColor,
+        "buttonFocusColor": buttonFocusColor,
+        "buttonFocusIconColor": buttonFocusIconColor,
+      },
+    );
+  }
+
+  static Future<void> resetAndroidCallStyle() async {
+    if (kIsWeb) return;
+    if (!Platform.isAndroid) return;
+    await _channel.invokeMethod('resetCallStyle', {});
+  }
+
+  static Future<void> setForeground(bool foreground) async {
+    if (kIsWeb) return;
+    if (!Platform.isAndroid) return;
+    await _channel.invokeMethod('setForeground', {"foreground": foreground});
   }
 }

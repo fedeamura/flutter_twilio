@@ -4,6 +4,7 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="src/main/res/drawable/ic_speaker.xml" value="0.215" />
+        <entry key="src/main/res/layout/activity_background_call.xml" value="0.2776268115942029" />
       </map>
     </option>
   </component>
@@ -12,5 +13,8 @@
   </component>
   <component name="ProjectType">
     <option name="id" value="Android" />
+  </component>
+  <component name="SuppressKotlinCodeStyleNotification">
+    <option name="disableForAll" value="true" />
   </component>
 </project>

@@ -13,7 +13,6 @@
     <color name="grayHeaderItem">#F1F2F3</color>
     <color name="colorGrayBlur">#8c939393</color>
 
-    <color name="call_background_color">#FFFFFF</color>
     <color name="call_accept">#357a38</color>
     <color name="call_reject">#f44336</color>
 

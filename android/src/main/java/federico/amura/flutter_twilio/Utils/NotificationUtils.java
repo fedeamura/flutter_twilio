@@ -10,11 +10,15 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.twilio.voice.CallInvite;
+
+
+import java.util.Map;
 
 import federico.amura.flutter_twilio.BackgroundCallJavaActivity;
 import federico.amura.flutter_twilio.IncomingCallNotificationService;
@@ -24,15 +28,24 @@ public class NotificationUtils {
 
     public static Notification createIncomingCallNotification(Context context, CallInvite callInvite, boolean showHeadsUp) {
         if (callInvite == null) return null;
-        if (callInvite.getFrom() == null) return null;
 
-        String displayName = PreferencesUtils.getInstance(context).findContactName(callInvite.getFrom());
-        if (displayName == null || displayName.trim().equals("")) {
-            displayName = callInvite.getFrom();
+        String fromDisplayName = null;
+        for (Map.Entry<String, String> entry : callInvite.getCustomParameters().entrySet()) {
+            if (entry.getKey().equals("fromDisplayName")) {
+                fromDisplayName = entry.getValue();
+            }
+        }
+        if (fromDisplayName == null || fromDisplayName.trim().isEmpty()) {
+            final String contactName = PreferencesUtils.getInstance(context).findContactName(callInvite.getFrom());
+            if (contactName != null && !contactName.trim().isEmpty()) {
+                fromDisplayName = contactName;
+            } else {
+                fromDisplayName = "Unknown name";
+            }
         }
 
         String notificationTitle = context.getString(R.string.notification_incoming_call_title);
-        String notificationText = context.getString(R.string.notification_incoming_call_text, displayName);
+        String notificationText = fromDisplayName;
 
         /*
          * Pass the notification id and call sid to use as an identifier to cancel the

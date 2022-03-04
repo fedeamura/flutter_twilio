@@ -16,6 +16,7 @@ import com.twilio.voice.CallInvite;
 import java.util.Map;
 import java.util.Set;
 
+import federico.amura.flutter_twilio.Utils.AppForegroundStateUtils;
 import federico.amura.flutter_twilio.Utils.PreferencesUtils;
 import federico.amura.flutter_twilio.Utils.TwilioConstants;
 import federico.amura.flutter_twilio.Utils.TwilioRegistrationListener;
@@ -121,7 +122,7 @@ public class FlutterTwilioPlugin implements
     @Override
     public void onMethodCall(MethodCall call, @NonNull Result result) {
         Log.i(TAG, "onMethodCall. Method: " + call.method);
-        TwilioUtils t = TwilioUtils.getInstance(this.context);
+        TwilioUtils twilioUtils = TwilioUtils.getInstance(this.context);
 
         switch (call.method) {
             case "register": {
@@ -130,7 +131,7 @@ public class FlutterTwilioPlugin implements
                 String fcmToken = call.argument("fcmToken");
 
                 try {
-                    t.register(identity, accessToken, fcmToken, new TwilioRegistrationListener() {
+                    twilioUtils.register(identity, accessToken, fcmToken, new TwilioRegistrationListener() {
                         @Override
                         public void onRegistered() {
                             result.success("");
@@ -150,7 +151,7 @@ public class FlutterTwilioPlugin implements
 
             case "unregister": {
                 try {
-                    t.unregister();
+                    twilioUtils.unregister();
                 } catch (Exception exception) {
                     exception.printStackTrace();
                 }
@@ -163,9 +164,9 @@ public class FlutterTwilioPlugin implements
                 try {
                     String to = call.argument("to");
                     Map<String, Object> data = call.argument("data");
-                    t.makeCall(to, data, getCallListener());
-                    responseChannel.invokeMethod("callConnecting", t.getCallDetails());
-                    result.success(t.getCallDetails());
+                    twilioUtils.makeCall(to, data, getCallListener());
+                    responseChannel.invokeMethod("callConnecting", twilioUtils.getCallDetails());
+                    result.success(twilioUtils.getCallDetails());
                 } catch (Exception exception) {
                     exception.printStackTrace();
                     result.error("", "", "");
@@ -175,8 +176,8 @@ public class FlutterTwilioPlugin implements
 
             case "toggleMute": {
                 try {
-                    boolean isMuted = t.toggleMute();
-                    responseChannel.invokeMethod(t.getCallStatus(), t.getCallDetails());
+                    boolean isMuted = twilioUtils.toggleMute();
+                    responseChannel.invokeMethod(twilioUtils.getCallStatus(), twilioUtils.getCallDetails());
                     result.success(isMuted);
                 } catch (Exception exception) {
                     exception.printStackTrace();
@@ -187,7 +188,7 @@ public class FlutterTwilioPlugin implements
 
             case "isMuted": {
                 try {
-                    boolean isMuted = t.isMuted();
+                    boolean isMuted = twilioUtils.isMuted();
                     result.success(isMuted);
                 } catch (Exception exception) {
                     exception.printStackTrace();
@@ -198,8 +199,8 @@ public class FlutterTwilioPlugin implements
 
             case "toggleSpeaker": {
                 try {
-                    boolean isSpeaker = t.toggleSpeaker();
-                    responseChannel.invokeMethod(t.getCallStatus(), t.getCallDetails());
+                    boolean isSpeaker = twilioUtils.toggleSpeaker();
+                    responseChannel.invokeMethod(twilioUtils.getCallStatus(), twilioUtils.getCallDetails());
                     result.success(isSpeaker);
                 } catch (Exception exception) {
                     exception.printStackTrace();
@@ -210,7 +211,7 @@ public class FlutterTwilioPlugin implements
 
             case "isSpeaker": {
                 try {
-                    boolean isSpeaker = t.isSpeaker();
+                    boolean isSpeaker = twilioUtils.isSpeaker();
                     result.success(isSpeaker);
                 } catch (Exception exception) {
                     exception.printStackTrace();
@@ -221,7 +222,7 @@ public class FlutterTwilioPlugin implements
 
             case "hangUp": {
                 try {
-                    t.disconnect();
+                    twilioUtils.disconnect();
                     result.success("");
                 } catch (Exception exception) {
                     exception.printStackTrace();
@@ -231,10 +232,10 @@ public class FlutterTwilioPlugin implements
             break;
 
             case "activeCall": {
-                if (t.getActiveCall() == null) {
+                if (twilioUtils.getActiveCall() == null) {
                     result.success("");
                 } else {
-                    result.success(t.getCallDetails());
+                    result.success(twilioUtils.getCallDetails());
                 }
             }
             break;
@@ -244,6 +245,91 @@ public class FlutterTwilioPlugin implements
                 String defaultDisplayName = call.argument("defaultDisplayName");
                 PreferencesUtils.getInstance(this.context).setContacts(data, defaultDisplayName);
                 result.success("");
+            }
+            break;
+
+
+            case "setCallStyle": {
+                try {
+                    final PreferencesUtils preferencesUtils = PreferencesUtils.getInstance(this.context);
+
+                    // Background color
+                    if (call.argument("backgroundColor") != null) {
+                        String color = call.argument("backgroundColor");
+                        preferencesUtils.storeCallBackgroundColor(color);
+                    } else {
+                        preferencesUtils.clearCallBackgroundColor();
+                    }
+
+                    // Text Color
+                    if (call.argument("textColor") != null) {
+                        String color = call.argument("textColor");
+                        preferencesUtils.storeCallTextColor(color);
+                    } else {
+                        preferencesUtils.clearCallTextColor();
+                    }
+
+                    // Button
+                    if (call.argument("buttonColor") != null) {
+                        String color = call.argument("buttonColor");
+                        preferencesUtils.storeCallButtonColor(color);
+                    } else {
+                        preferencesUtils.clearCallButtonColor();
+                    }
+
+                    // Button Icon
+                    if (call.argument("buttonIconColor") != null) {
+                        String color = call.argument("buttonIconColor");
+                        preferencesUtils.storeCallButtonIconColor(color);
+                    } else {
+                        preferencesUtils.clearCallButtonIconColor();
+                    }
+
+
+                    // Button focus
+                    if (call.argument("buttonFocusColor") != null) {
+                        String color = call.argument("buttonFocusColor");
+                        preferencesUtils.storeCallButtonFocusColor(color);
+                    } else {
+                        preferencesUtils.clearCallButtonFocusColor();
+                    }
+
+                    // Button focus icon
+                    if (call.argument("buttonFocusIconColor") != null) {
+                        String color = call.argument("buttonFocusIconColor");
+                        preferencesUtils.storeCallButtonFocusIconColor(color);
+                    } else {
+                        preferencesUtils.clearCallButtonFocusIconColor();
+                    }
+
+                    result.success("");
+                } catch (Exception exception) {
+                    exception.printStackTrace();
+                    result.error("", "", "");
+                }
+            }
+            break;
+
+            case "resetCallStyle": {
+                final PreferencesUtils preferencesUtils = PreferencesUtils.getInstance(this.context);
+                preferencesUtils.clearCallBackgroundColor();
+                preferencesUtils.clearCallTextColor();
+                preferencesUtils.clearCallButtonColor();
+                preferencesUtils.clearCallButtonIconColor();
+                preferencesUtils.clearCallButtonFocusColor();
+                preferencesUtils.clearCallButtonFocusIconColor();
+                result.success("");
+            }
+            break;
+
+            case "setForeground": {
+                try {
+                    AppForegroundStateUtils.getInstance().setForeground(call.argument("foreground"));
+                    result.success("");
+                } catch (Exception exception) {
+                    exception.printStackTrace();
+                    result.error("", "", "");
+                }
             }
             break;
         }
@@ -259,9 +345,13 @@ public class FlutterTwilioPlugin implements
     }
 
     private void answer(CallInvite callInvite) {
-        TwilioUtils t = TwilioUtils.getInstance(this.context);
-        t.acceptInvite(callInvite, getCallListener());
-        responseChannel.invokeMethod("callConnecting", t.getCallDetails());
+        try {
+            TwilioUtils t = TwilioUtils.getInstance(this.context);
+            t.acceptInvite(callInvite, getCallListener());
+            responseChannel.invokeMethod("callConnecting", t.getCallDetails());
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
 
     Call.Listener getCallListener() {

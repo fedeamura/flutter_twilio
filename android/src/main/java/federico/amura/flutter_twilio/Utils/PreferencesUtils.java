@@ -1,8 +1,12 @@
 package federico.amura.flutter_twilio.Utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.util.Log;
+
+import androidx.core.content.res.ResourcesCompat;
 
 import java.util.Map;
 
@@ -11,6 +15,10 @@ public class PreferencesUtils {
 
     private SharedPreferences sharedPreferencesAccess;
     private SharedPreferences sharedPreferencesContactData;
+    private SharedPreferences sharedPreferencesCallStyle;
+    private Context context;
+
+    @SuppressLint("StaticFieldLeak")
     private static PreferencesUtils instance;
 
     private PreferencesUtils() {
@@ -22,7 +30,10 @@ public class PreferencesUtils {
             instance = new PreferencesUtils();
             instance.sharedPreferencesAccess = context.getSharedPreferences(TwilioConstants.SHARED_PREFERENCES_ACCESS, Context.MODE_PRIVATE);
             instance.sharedPreferencesContactData = context.getSharedPreferences(TwilioConstants.SHARED_PREFERENCES_CONTACT_DATA, Context.MODE_PRIVATE);
+            instance.sharedPreferencesCallStyle = context.getSharedPreferences(TwilioConstants.SHARED_PREFERENCES_CALL_STYLE, Context.MODE_PRIVATE);
         }
+
+        instance.context = context;
         return instance;
     }
 
@@ -131,5 +142,175 @@ public class PreferencesUtils {
 
     public String getFcmToken() {
         return this.sharedPreferencesAccess.getString(TwilioConstants.SHARED_PREFERENCES_KEY_FCM_TOKEN, null);
+    }
+
+
+    private int parseColor(SharedPreferences prefs, String key, int defaultColor) {
+        try {
+            String defaultHexColor = String.format("#%06X", (0xFFFFFF & defaultColor));
+            String color = prefs.getString(key, defaultHexColor);
+            return Color.parseColor(color);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return defaultColor;
+        }
+    }
+
+    // Call background color
+    public int getCallBackgroundColor() {
+        int defaultColor = ResourcesCompat.getColor(
+                this.context.getResources(),
+                android.R.color.white,
+                this.context.getTheme()
+        );
+
+        return parseColor(this.sharedPreferencesCallStyle, TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BACKGROUND_COLOR, defaultColor);
+    }
+
+    public void storeCallBackgroundColor(String color) {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.putString(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BACKGROUND_COLOR, color);
+        editor.apply();
+    }
+
+    public void clearCallBackgroundColor() {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.remove(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BACKGROUND_COLOR);
+        editor.apply();
+    }
+
+    // Call text color
+    public int getCallTextColor() {
+        int defaultColor = ResourcesCompat.getColor(
+                this.context.getResources(),
+                android.R.color.black,
+                this.context.getTheme()
+        );
+
+        return parseColor(
+                this.sharedPreferencesCallStyle,
+                TwilioConstants.SHARED_PREFERENCES_KEY_CALL_TEXT_COLOR,
+                defaultColor
+        );
+    }
+
+    public void storeCallTextColor(String color) {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.putString(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_TEXT_COLOR, color);
+        editor.apply();
+    }
+
+    public void clearCallTextColor() {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.remove(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_TEXT_COLOR);
+        editor.apply();
+    }
+
+    // Call button color
+    public int getCallButtonColor() {
+        int defaultColor = ResourcesCompat.getColor(
+                this.context.getResources(),
+                android.R.color.darker_gray,
+                this.context.getTheme()
+        );
+
+        return parseColor(
+                this.sharedPreferencesCallStyle,
+                TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_COLOR,
+                defaultColor
+        );
+    }
+
+    public void storeCallButtonColor(String color) {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.putString(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_COLOR, color);
+        editor.apply();
+    }
+
+    public void clearCallButtonColor() {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.remove(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_COLOR);
+        editor.apply();
+    }
+
+    // Call button icon color
+    public int getCallButtonIconColor() {
+        int defaultColor = ResourcesCompat.getColor(
+                this.context.getResources(),
+                android.R.color.white,
+                this.context.getTheme()
+        );
+
+        return parseColor(
+                this.sharedPreferencesCallStyle,
+                TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_ICON_COLOR,
+                defaultColor
+        );
+    }
+
+    public void storeCallButtonIconColor(String color) {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.putString(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_ICON_COLOR, color);
+        editor.apply();
+    }
+
+    public void clearCallButtonIconColor() {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.remove(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_ICON_COLOR);
+        editor.apply();
+    }
+
+    // Call button focus color
+    public int getCallButtonFocusColor() {
+        int defaultColor = ResourcesCompat.getColor(
+                this.context.getResources(),
+                android.R.color.holo_blue_dark,
+                this.context.getTheme()
+        );
+
+        return parseColor(
+                this.sharedPreferencesCallStyle,
+                TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_FOCUS_COLOR,
+                defaultColor
+        );
+    }
+
+    public void storeCallButtonFocusColor(String color) {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.putString(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_FOCUS_COLOR, color);
+        editor.apply();
+    }
+
+    public void clearCallButtonFocusColor() {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.remove(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_FOCUS_COLOR);
+        editor.apply();
+    }
+
+    // Call button focus icon color
+    public int getCallButtonFocusIconColor() {
+        int defaultColor = ResourcesCompat.getColor(
+                this.context.getResources(),
+                android.R.color.white,
+                this.context.getTheme()
+        );
+
+        return parseColor(
+                this.sharedPreferencesCallStyle,
+                TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_FOCUS_ICON_COLOR,
+                defaultColor
+        );
+    }
+
+    public void storeCallButtonFocusIconColor(String color) {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.putString(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_FOCUS_ICON_COLOR, color);
+        editor.apply();
+    }
+
+    public void clearCallButtonFocusIconColor() {
+        SharedPreferences.Editor editor = this.sharedPreferencesCallStyle.edit();
+        editor.remove(TwilioConstants.SHARED_PREFERENCES_KEY_CALL_BUTTON_FOCUS_ICON_COLOR);
+        editor.apply();
     }
 }

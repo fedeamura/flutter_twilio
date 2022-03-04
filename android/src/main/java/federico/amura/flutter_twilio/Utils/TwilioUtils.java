@@ -19,10 +19,11 @@ import com.twilio.voice.Voice;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class TwilioUtils {
-    private static final String TAG = "TwilioSDK";
+    private static final String TAG = "TwilioUtils";
 
     @SuppressLint("StaticFieldLeak")
     private static TwilioUtils instance;
@@ -37,7 +38,9 @@ public class TwilioUtils {
     }
 
     private Call activeCall;
-    private String to;
+    private CallInvite callInvite;
+    private String fromDisplayName;
+    private String toDisplayName;
     private Context context;
     private String status;
 
@@ -72,7 +75,6 @@ public class TwilioUtils {
     }
 
     public void unregister() {
-
         String accessToken = PreferencesUtils.getInstance(this.context).getAccessToken();
         if (accessToken == null) return;
 
@@ -121,8 +123,23 @@ public class TwilioUtils {
                 .params(params)
                 .build();
 
-        this.to = to;
+
+        String fromDisplayName = null;
+        String toDisplayName = null;
+        if (data != null && data.containsKey("fromDisplayName")) {
+            if (data.containsKey("fromDisplayName") && data.get("fromDisplayName") != null) {
+                fromDisplayName = Objects.requireNonNull(data.get("fromDisplayName")).toString();
+            }
+
+            if (data.containsKey("toDisplayName") && data.get("toDisplayName") != null) {
+                toDisplayName = Objects.requireNonNull(data.get("toDisplayName")).toString();
+            }
+        }
+
         this.status = "callConnecting";
+        this.callInvite = null;
+        this.fromDisplayName = fromDisplayName;
+        this.toDisplayName = toDisplayName;
         this.activeCall = Voice.connect(this.context, connectOptions, getCallListener(listener));
     }
 
@@ -135,11 +152,12 @@ public class TwilioUtils {
             throw new RuntimeException("No call invite");
         }
 
-        this.to = callInvite.getFrom();
         this.status = "callConnecting";
+        this.fromDisplayName = null;
+        this.toDisplayName = null;
+        this.callInvite = callInvite;
         this.activeCall = callInvite.accept(this.context, getCallListener(listener));
     }
-
 
     public void rejectInvite(CallInvite callInvite) {
         if (callInvite == null) {
@@ -147,18 +165,24 @@ public class TwilioUtils {
         }
 
         callInvite.reject(this.context);
+        this.activeCall = null;
+        this.callInvite = null;
+        this.fromDisplayName = null;
+        this.toDisplayName = null;
         SoundUtils.getInstance(this.context).playDisconnect();
     }
 
     public void disconnect() {
-        if (this.activeCall == null) {
-            Log.i(TAG, "disconnect. No active call");
-            return;
+        this.status = "callDisconnected";
+        if (this.activeCall != null) {
+            this.activeCall.disconnect();
+            SoundUtils.getInstance(this.context).playDisconnect();
         }
 
-        this.status = "callDisconnected";
-        this.activeCall.disconnect();
-        SoundUtils.getInstance(this.context).playDisconnect();
+        this.callInvite = null;
+        this.activeCall = null;
+        this.fromDisplayName = null;
+        this.toDisplayName = null;
     }
 
     public boolean toggleMute() {
@@ -210,6 +234,7 @@ public class TwilioUtils {
 
     public HashMap<String, Object> getCallDetails() {
         HashMap<String, Object> map = new HashMap<>();
+
         if (this.activeCall == null) {
             map.put("id", "");
             map.put("mute", false);
@@ -219,12 +244,72 @@ public class TwilioUtils {
             map.put("mute", isMuted());
             map.put("speaker", isSpeaker());
         }
-        map.put("to", this.to);
-        map.put("toDisplayName", PreferencesUtils.getInstance(this.context).findContactName(this.to));
-        map.put("toPhotoURL", PreferencesUtils.getInstance(this.context).findPhotoURL(this.to));
+
+        if (this.callInvite != null) {
+            map.put("customParameters", this.callInvite.getCustomParameters());
+        }
+
+        map.put("fromDisplayName", this.getFromDisplayName());
+        map.put("toDisplayName", this.getToDisplayName());
+        map.put("outgoing", this.callInvite == null);
         map.put("status", this.status);
         return map;
     }
+
+    private String getFromDisplayName() {
+        String result = null;
+
+        if (this.callInvite != null) {
+            for (Map.Entry<String, String> entry : callInvite.getCustomParameters().entrySet()) {
+                if (entry.getKey().equals("fromDisplayName")) {
+                    result = entry.getValue();
+                }
+            }
+
+            if (result == null || result.trim().isEmpty()) {
+                final String contactName = PreferencesUtils.getInstance(context).findContactName(this.callInvite.getFrom());
+                if (contactName != null && !contactName.trim().isEmpty()) {
+                    result = contactName;
+                }
+            }
+        } else {
+            result = this.fromDisplayName;
+        }
+
+        if (result == null || result.trim().isEmpty()) {
+            result = "Unknown name";
+        }
+
+        return result;
+    }
+
+    private String getToDisplayName() {
+        String result = null;
+
+        if (this.callInvite != null) {
+            for (Map.Entry<String, String> entry : callInvite.getCustomParameters().entrySet()) {
+                if (entry.getKey().equals("toDisplayName")) {
+                    result = entry.getValue();
+                }
+            }
+
+            if (result == null || result.trim().isEmpty()) {
+                final String contactName = PreferencesUtils.getInstance(context).findContactName(this.callInvite.getTo());
+                if (contactName != null && !contactName.trim().isEmpty()) {
+                    result = contactName;
+                }
+            }
+        } else {
+            result = this.toDisplayName;
+        }
+
+        if (result == null || result.trim().isEmpty()) {
+            result = "Unknown name";
+        }
+
+        return result;
+    }
+
 
     public String getCallStatus() {
         if (this.activeCall == null) return null;

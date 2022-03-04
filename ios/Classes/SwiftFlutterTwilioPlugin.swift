@@ -9,8 +9,11 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
         
     var deviceTokenString: Data?
     var callTo: String = ""
+    var callData: NSDictionary?
     var callStatus: String = ""
     var callInvite: CallInvite?
+    var fromDisplayName: String?
+    var toDisplayName: String?
     var call: Call?
     var result: FlutterResult?
     
@@ -76,10 +79,29 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
         
         if flutterCall.method == "makeCall" {
             guard let callTo = arguments?["to"] as? String else {return}
-            self.callTo = callTo;
+            guard let callData = arguments?["data"] as? NSDictionary else {return}
+
+
+            var fromDisplayName: String? = nil
+            var toDisplayName: String? = nil
+
+            if callData["fromDisplayName"] != nil {
+                fromDisplayName = callData["fromDisplayName"] as? String ?? ""
+            }
+
+            if callData["toDisplayName"] != nil {
+                toDisplayName = callData["toDisplayName"]  as? String ?? ""
+            }
+
+            self.callInvite = nil
+            self.callTo = callTo
+            self.callData = callData
             self.callStatus = "callConnecting"
-            makeCall(to: callTo)
+            self.fromDisplayName = fromDisplayName
+            self.toDisplayName = toDisplayName
             self.result = result
+
+            makeCall(to: callTo)
             self.channel?.invokeMethod("callConnecting", arguments: self.getCallResult())
             return
         }
@@ -163,18 +185,26 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
         
         if flutterCall.method == "unregister"
         {
+            self.result = result
             self.unregisterTwilio()
-            result("")
             return
         }
         
         if flutterCall.method == "hangUp"
         {
-            if (self.call != nil && self.call?.state == .connected) {
+            self.result = result
+            if (self.call != nil) {
                 self.userInitiatedDisconnect = true
                 performEndCallAction(uuid: self.call!.uuid!)
+            } else {
+                self.call = nil
+                self.callInvite = nil
+                self.callTo = ""
+                self.fromDisplayName = nil
+                self.toDisplayName
+                result("")
+                self.result = nil
             }
-            result("")
             return
         }
         
@@ -254,28 +284,32 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
         
         self.removeAccessToken()
         TwilioVoice.unregister(accessToken: accessToken, deviceToken: deviceToken) {(error) in
-            
+            if(error != nil){
+                NSLog(error!.localizedDescription)
+
+                self.result?(FlutterError.init(
+                    code: "Error",
+                    message: "Error",
+                    details: "Error"
+                ))
+            } else {
+                self.result?("")
+            }
+            self.result = nil
         }
     }
     
     func makeCall(to: String) {
-        if (self.call != nil && self.call?.state == .connected) {
-            self.userInitiatedDisconnect = true
-            self.performEndCallAction(uuid: self.call!.uuid!)
+        if (self.call != nil) {
             self.result?(FlutterError.init(
                 code: "Already and active call",
                 message: "Already and active call",
                 details: "Already and active call"
             ))
             self.result = nil;
-
         } else {
-            var displayName: String = to
-            if self.hasContactDisplayName(phoneNumber: to) {
-                displayName = self.getContactDisplayName(phoneNumber: to)
-            }
             let uuid = UUID()
-            self.performStartCallAction(uuid: uuid, handle: displayName)
+            self.performStartCallAction(uuid: uuid)
         }
     }
     
@@ -374,9 +408,13 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
             callResult["speaker"] = false
         }
 
-        callResult["to"] = self.callTo
-        callResult["toDisplayName"] = self.getContactDisplayName(phoneNumber: self.callTo)
-        callResult["toPhotoURL"] = self.getContactPhotoURL(phoneNumber: self.callTo)
+        if self.callInvite != nill {
+            callResult["customParameters"] = self.callInvite.customParameters
+        }
+
+        callResult["toDisplayName"] = self.getToDisplayName()
+        callResult["fromDisplayName"] = self.getFromDisplayName()
+        callResult["outgoing"] = self.callInvite == nil
         callResult["status"] = self.callStatus
         return callResult;
     }
@@ -392,11 +430,7 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
     public func callInviteReceived(callInvite: CallInvite) {
         NSLog("callInviteReceived:")
         
-        if (self.callInvite != nil) {
-            NSLog("A CallInvite is already in progress. Ignoring the incoming CallInvite from \(callInvite.from ?? "Unknown Caller")")
-            self.incomingPushHandled()
-            return;
-        } else if (self.call != nil) {
+        if (self.call != nil) {
             NSLog("Already an active call.");
             NSLog("  >> Ignoring call from \(String(describing: callInvite.from))");
             self.incomingPushHandled()
@@ -404,40 +438,45 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
         }
         
         self.callInvite = callInvite
-        self.callTo = callInvite.from ?? ""
-        var displayName = self.callTo
-        if self.hasContactDisplayName(phoneNumber: self.callTo) {
-            displayName = self.getContactDisplayName(phoneNumber: self.callTo)
-        }
-    
-        reportIncomingCall(from: displayName, uuid: callInvite.uuid)
+        reportIncomingCall(uuid: callInvite.uuid)
     }
     
     
     public func cancelledCallInviteReceived(cancelledCallInvite: CancelledCallInvite, error: Error) {
         NSLog("cancelledCallInviteCanceled:")
-        
-        self.incomingPushHandled()
-        
+
         if (self.callInvite == nil || self.callInvite!.callSid != cancelledCallInvite.callSid) {
             NSLog("No matching pending CallInvite. Ignoring the Cancelled CallInvite")
             return
         }
         
         performEndCallAction(uuid: self.callInvite!.uuid)
-        
-        self.callInvite = nil
         self.incomingPushHandled()
     }
     
-    func callDisconnected(error: String?) {
+    func callDisconnected(id: UUID, error: String?) {
         self.call = nil
+        self.callInvite = nil
+        self.fromDisplayName = nil
+        self.toDisplayName = nil
         self.callKitCompletionCallback = nil
         self.userInitiatedDisconnect = false
+
         DispatchQueue.main.async {
             self.callStatus = "callDisconnected"
             self.channel?.invokeMethod("callDisconnected", arguments: nil)
         }
+
+
+        var reason = CXCallEndedReason.remoteEnded
+
+        if error != nil {
+            NSLog("Hubo un error en el did disconect, entonces pongo que se corta por un error")
+            reason = .failed
+        }
+
+        self.callKitProvider.reportCall(with: id, endedAt: Date(), reason: reason)
+
     }
     
     
@@ -453,6 +492,56 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
             }
         }
         return speaker
+    }
+    
+    func getFromDisplayName() -> String{
+        var result: String? = nil
+        if self.callInvite != nil {
+            let params = self.callInvite?.customParameters
+            if params?["fromDisplayName"] != nil {
+                result = params?["fromDisplayName"]
+            }
+            
+            if result == nil || result == "" {
+                let contactName = self.getContactDisplayName(phoneNumber: self.callInvite?.from ?? "")
+                if contactName != "" {
+                    result = contactName
+                }
+            }
+        }else{
+            result = self.fromDisplayName ?? ""
+        }
+                
+        if result == nil || result == "" {
+            return "Unknown name"
+        }
+        
+        return result!
+    }
+    
+    func getToDisplayName() -> String{
+        var result: String? = nil
+        if self.callInvite != nil {
+            let params = self.callInvite?.customParameters
+            if params?["toDisplayName"] != nil {
+                result = params?["toDisplayName"]
+            }
+            
+            if result == nil {
+                let contactName = self.getContactDisplayName(phoneNumber: self.callInvite?.to ?? "")
+                if contactName != "" {
+                    result = contactName
+                }
+            }
+        }else{
+            result = self.toDisplayName ?? ""
+        }
+                
+        if result == nil || result == "" {
+            return "Unknown name"
+        }
+        
+        return result!
     }
     
     // MARK: AVAudioSession
@@ -475,8 +564,9 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
     
     
     // MARK: Call Kit Actions
-    func performStartCallAction(uuid: UUID, handle: String) {
-        let callHandle = CXHandle(type: .generic, value: handle)
+    func performStartCallAction(uuid: UUID) {
+        let toDisplayName = self.getToDisplayName()
+        let callHandle = CXHandle(type: .generic, value: toDisplayName)
         let startCallAction = CXStartCallAction(call: uuid, handle: callHandle)
         let transaction = CXTransaction(action: startCallAction)
         
@@ -508,8 +598,9 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
         }
     }
     
-    func reportIncomingCall(from: String, uuid: UUID) {
-        let callHandle = CXHandle(type: .generic, value: from)
+    func reportIncomingCall(uuid: UUID) {
+        let fromDisplayName = self.getFromDisplayName()
+        let callHandle = CXHandle(type: .generic, value: fromDisplayName)
         
         let callUpdate = CXCallUpdate()
         callUpdate.remoteHandle = callHandle
@@ -529,23 +620,57 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
     }
     
     func performEndCallAction(uuid: UUID) {
-        
-        let endCallAction = CXEndCallAction(call: uuid)
-        let transaction = CXTransaction(action: endCallAction)
-        
-        callKitCallController.request(transaction) { error in
-            
+
+        if self.call == nil {
+            return;
         }
+
+        self.call?.disconnect()
+        self.call = nil
+        self.callInvite = nil
+        self.result?("")
+        self.result = nil
+
+        self.callDisconnected(id: uuid, error: nil)
+//         let endCallAction = CXEndCallAction(call: uuid)
+//         let transaction = CXTransaction(action: endCallAction)
+//
+//         callKitCallController.request(transaction) { error in
+//             if error != nil {
+//                 NSLog("Error ending call:")
+//                 self.result?(FlutterError.init(
+//                     code: "Error",
+//                     message: "Error",
+//                     details: "Error"
+//                 ))
+//
+//                 self.result = nil
+//             } else {
+//                 self.call = nil
+//                 self.callInvite = nil
+//                 self.result?("")
+//                 self.result = nil
+//             }
+//         }
     }
     
-    func performVoiceCall(uuid: UUID, client: String?, completionHandler: @escaping (Bool) -> Swift.Void) {
+    func performVoiceCall(uuid: UUID, completionHandler: @escaping (Bool) -> Swift.Void) {
         guard let accessToken = getAccessToken() else {
             completionHandler(false)
             return
         }
-        
+
+        var params: [String: String] = [:]
+        if self.callData != nil {
+            for (key, value) in self.callData! {
+                params[String(describing: key)] = String(describing: value)
+            }
+        }
+
+        params["To"] = self.callTo
+
         let connectOptions: ConnectOptions = ConnectOptions(accessToken: accessToken) { (builder) in
-            builder.params = ["To" : self.callTo]
+            builder.params = params
             builder.uuid = uuid
         }
                 
@@ -568,7 +693,6 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
         self.channel?.invokeMethod("callConnecting", arguments: self.getCallResult())
         call = self.callInvite!.accept(options: acceptOptions, delegate: self)
         
-        self.callInvite = nil
         self.callKitCompletionCallback = completionHandler
         self.incomingPushHandled()
     }
@@ -676,7 +800,7 @@ extension SwiftFlutterTwilioPlugin : CXProviderDelegate {
         
         provider.reportOutgoingCall(with: action.callUUID, startedConnectingAt: Date())
         
-        self.performVoiceCall(uuid: action.callUUID, client: "") { (success) in
+        self.performVoiceCall(uuid: action.callUUID) { (success) in
             if (success) {
                 provider.reportOutgoingCall(with: action.callUUID, connectedAt: Date())
                 action.fulfill()
@@ -774,23 +898,27 @@ extension SwiftFlutterTwilioPlugin : CallDelegate {
             completion(false)
         }
         
-        performEndCallAction(uuid: call.uuid!)
-        callDisconnected(error: error.localizedDescription)
+        callDisconnected(id: call.uuid!, error: error.localizedDescription)
     }
     
     public func callDidDisconnect(call: Call, error: Error?) {
-        NSLog("callDidDisconnect:")
+        NSLog("callDidDisconnect: \(error?.localizedDescription)")
         
-        if !self.userInitiatedDisconnect {
-            var reason = CXCallEndedReason.remoteEnded
-            
-            if error != nil {
-                reason = .failed
-            }
-            
-            self.callKitProvider.reportCall(with: call.uuid!, endedAt: Date(), reason: reason)
-        }
-        callDisconnected(error: nil)
+//         if !self.userInitiatedDisconnect {
+//             NSLog("Como yo no inicie el hangup, Mando a cortar callkit")
+//
+//             var reason = CXCallEndedReason.remoteEnded
+//
+//             if error != nil {
+//                 NSLog("Hubo un error en el did disconect, entonces pongo que se corta por un error")
+//                 reason = .failed
+//             }
+//
+//             self.callKitProvider.reportCall(with: call.uuid!, endedAt: Date(), reason: reason)
+//         } else {
+//             NSLog("Yo inicie el hang up, entonces no corto el call kit desde aca")
+//         }
+        callDisconnected(id: call.uuid!, error: nil)
     }
 }
 

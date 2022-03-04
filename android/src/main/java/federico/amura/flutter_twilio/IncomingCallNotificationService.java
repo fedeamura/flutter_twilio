@@ -1,5 +1,6 @@
 package federico.amura.flutter_twilio;
 
+import android.app.ActivityManager;
 import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.Service;
@@ -13,6 +14,9 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.twilio.voice.CallInvite;
 import com.twilio.voice.CancelledCallInvite;
 
+import java.util.List;
+
+import federico.amura.flutter_twilio.Utils.AppForegroundStateUtils;
 import federico.amura.flutter_twilio.Utils.NotificationUtils;
 import federico.amura.flutter_twilio.Utils.SoundUtils;
 import federico.amura.flutter_twilio.Utils.TwilioConstants;
@@ -93,7 +97,11 @@ public class IncomingCallNotificationService extends Service {
         this.stopServiceIncomingCall();
 
         // Reject call
-        TwilioUtils.getInstance(this).rejectInvite(callInvite);
+        try {
+            TwilioUtils.getInstance(this).rejectInvite(callInvite);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
 
     private void handleCancelledCall(CancelledCallInvite cancelledCallInvite) {
@@ -127,9 +135,8 @@ public class IncomingCallNotificationService extends Service {
     }
 
     private boolean isAppVisible() {
-        return App.visible;
+        return AppForegroundStateUtils.getInstance().isForeground();
     }
-
 
     // UTILS
 
@@ -147,7 +154,6 @@ public class IncomingCallNotificationService extends Service {
     }
 
     private void openBackgroundCallActivityForAcceptCall(CallInvite callInvite) {
-//        Intent intent = new Intent("background-activity");
         Intent intent = new Intent(this, BackgroundCallJavaActivity.class);
         intent.setFlags(
                 Intent.FLAG_ACTIVITY_NEW_TASK |

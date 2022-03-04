@@ -11,8 +11,8 @@ import android.os.Vibrator;
 
 import federico.amura.flutter_twilio.R;
 
-
 public class SoundUtils {
+
     private boolean playing = false;
     private boolean loaded = false;
     private boolean playingCalled = false;
@@ -26,7 +26,6 @@ public class SoundUtils {
     private final AudioManager audioManager;
 
     private SoundUtils(Context context) {
-        // AudioManager audio settings for adjusting the volume
         audioManager = (AudioManager) context.getSystemService(AUDIO_SERVICE);
         float actualVolume = (float) audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         float maxVolume = (float) audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
@@ -51,7 +50,7 @@ public class SoundUtils {
         });
         ringingSoundId = soundPool.load(context, R.raw.incoming, 1);
         disconnectSoundId = soundPool.load(context, R.raw.disconnect, 1);
-        // Get instance of Vibrator from current Context
+
         vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
@@ -107,5 +106,4 @@ public class SoundUtils {
             playing = false;
         }
     }
-
 }

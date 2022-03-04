@@ -18,6 +18,7 @@ import android.os.PowerManager;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -35,6 +36,7 @@ import com.twilio.voice.CallException;
 import com.twilio.voice.CallInvite;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -47,6 +49,7 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
     private static final String TAG = "BackgroundCallActivity";
 
     private PowerManager.WakeLock wakeLock;
+    private ViewGroup container;
     private ImageView image;
     private TextView textDisplayName;
     private TextView textPhoneNumber;
@@ -72,6 +75,7 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_background_call);
 
+        this.container = findViewById(R.id.container);
         this.image = findViewById(R.id.image);
         this.textDisplayName = findViewById(R.id.textDisplayName);
         this.textPhoneNumber = findViewById(R.id.textPhoneNumber);
@@ -102,7 +106,7 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
         this.containerIncomingCall = findViewById(R.id.containerIncomingCall);
         this.containerIncomingCall.setVisibility(View.GONE);
 
-        TwilioUtils.getInstance(this).setSpeaker(false);
+        applyColors();
         applyColorToButton(this.btnSpeaker, false);
         applyColorToButton(this.btnMute, false);
 
@@ -166,6 +170,7 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
             setShowWhenLocked(true);
         } else {
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            //noinspection deprecation
             this.wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "lock:" + TAG);
             this.wakeLock.acquire(60 * 24 * 60 * 1000L /*24hs*/);
 
@@ -227,7 +232,7 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
                 this.callInvite = intent.getParcelableExtra(TwilioConstants.EXTRA_INCOMING_CALL_INVITE);
                 containerIncomingCall.setVisibility(View.VISIBLE);
                 containerActiveCall.setVisibility(View.GONE);
-                updateCallDetails(this.callInvite.getFrom());
+                updateCallDetails();
             }
             break;
 
@@ -235,7 +240,7 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
                 this.callInvite = intent.getParcelableExtra(TwilioConstants.EXTRA_INCOMING_CALL_INVITE);
                 containerIncomingCall.setVisibility(View.GONE);
                 containerActiveCall.setVisibility(View.VISIBLE);
-                updateCallDetails(this.callInvite.getFrom());
+                updateCallDetails();
                 this.acceptCall();
             }
             break;
@@ -280,7 +285,7 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
         try {
             TwilioUtils.getInstance(this).acceptInvite(this.callInvite, getListener());
         } catch (Exception exception) {
-            Log.i(TAG, "Error accepting call. " + exception.getMessage());
+            exception.printStackTrace();
             this.close();
         }
     }
@@ -294,41 +299,77 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
             return;
         }
 
-        this.callInvite.reject(this);
+        try {
+            this.callInvite.reject(this);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+
         this.close();
     }
 
 
     private void hangUp() {
-        TwilioUtils.getInstance(this).disconnect();
+        try {
+            TwilioUtils.getInstance(this).disconnect();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+
         this.close();
     }
 
     private void onCallCanceled() {
-        TwilioUtils.getInstance(this).disconnect();
+        try {
+            TwilioUtils.getInstance(this).disconnect();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+
         this.close();
     }
 
     private void toggleMute() {
-        boolean muted = TwilioUtils.getInstance(this).toggleMute();
-        applyColorToButton(this.btnMute, muted);
-        this.btnMute.setImageResource(muted ? R.drawable.ic_mic_off : R.drawable.ic_mic);
+        try {
+            boolean muted = TwilioUtils.getInstance(this).toggleMute();
+            applyColorToButton(this.btnMute, muted);
+            this.btnMute.setImageResource(muted ? R.drawable.ic_mic_off : R.drawable.ic_mic);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
 
     private void toggleSpeaker() {
-        boolean speaker = TwilioUtils.getInstance(this).toggleSpeaker();
-        applyColorToButton(this.btnSpeaker, speaker);
+        try {
+            boolean speaker = TwilioUtils.getInstance(this).toggleSpeaker();
+            applyColorToButton(this.btnSpeaker, speaker);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
 
-    private void applyColorToButton(ImageView view, boolean value) {
+    private void applyColors() {
+        final PreferencesUtils preferencesUtils = PreferencesUtils.getInstance(this);
+        final int backgroundColor = preferencesUtils.getCallBackgroundColor();
+        this.container.setBackgroundColor(backgroundColor);
+
+        final int textColor = preferencesUtils.getCallTextColor();
+        this.textDisplayName.setTextColor(textColor);
+        this.textPhoneNumber.setTextColor(textColor);
+        this.textCallStatus.setTextColor(textColor);
+        this.textTimer.setTextColor(textColor);
+    }
+
+    private void applyColorToButton(ImageView view, boolean fill) {
+        final PreferencesUtils preferencesUtils = PreferencesUtils.getInstance(this);
         int backgroundColor;
         int iconColor;
-        if (value) {
-            backgroundColor = getResources().getColor(R.color.call_btn_fill);
-            iconColor = getResources().getColor(R.color.on_call_btn_fill);
+        if (fill) {
+            backgroundColor = preferencesUtils.getCallButtonFocusColor();
+            iconColor = preferencesUtils.getCallButtonFocusIconColor();
         } else {
-            backgroundColor = getResources().getColor(R.color.call_btn);
-            iconColor = getResources().getColor(R.color.on_call_btn);
+            backgroundColor = preferencesUtils.getCallButtonColor();
+            iconColor = preferencesUtils.getCallButtonIconColor();
         }
 
         Drawable background = view.getBackground();
@@ -336,7 +377,7 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
         ImageViewCompat.setImageTintList(view, ColorStateList.valueOf(iconColor));
     }
 
-    private void updateCallDetails(String from) {
+    private void updateCallDetails() {
         HashMap<String, Object> call = TwilioUtils.getInstance(this).getCallDetails();
 
         String status = (String) call.get("status");
@@ -365,45 +406,57 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
         }
 
         // Display name
-        String displayName;
-        if (from != null && !from.trim().equals("")) {
-            displayName = PreferencesUtils.getInstance(this).findContactName(from);
-        } else {
-            displayName = (String) call.get("toDisplayName");
-        }
+        String fromDisplayName = null;
+        if (this.callInvite != null) {
+            for (Map.Entry<String, String> entry : callInvite.getCustomParameters().entrySet()) {
+                if (entry.getKey().equals("fromDisplayName")) {
+                    fromDisplayName = entry.getValue();
+                }
+            }
 
-        if (displayName == null || displayName.trim().equals("")) {
-            displayName = PreferencesUtils.getInstance(this).getDefaultDisplayName();
+            if (fromDisplayName == null || fromDisplayName.trim().isEmpty()) {
+                final String contactName = PreferencesUtils.getInstance(this).findContactName(this.callInvite.getFrom());
+                if (contactName != null && !contactName.trim().isEmpty()) {
+                    fromDisplayName = contactName;
+                } else {
+                    fromDisplayName = "Unknown name";
+                }
+            }
+        } else {
+            fromDisplayName = "Unknown name";
         }
-        this.textDisplayName.setText(displayName);
+        this.textDisplayName.setText(fromDisplayName);
 
         // Phone number
-        String phoneNumber;
-        if (from != null && !from.trim().equals("")) {
-            phoneNumber = from;
-        } else {
-            phoneNumber = (String) call.get("to");
-        }
-
-        if (phoneNumber != null && !phoneNumber.trim().equals("")) {
-            this.textPhoneNumber.setText(phoneNumber);
-        } else {
-            this.textPhoneNumber.setText("");
-        }
+        this.textPhoneNumber.setText("");
+//        String phoneNumber;
+//        if (from != null && !from.trim().equals("")) {
+//            phoneNumber = from;
+//        } else {
+//            phoneNumber = (String) call.get("to");
+//        }
+//
+//        if (phoneNumber != null && !phoneNumber.trim().equals("")) {
+//            this.textPhoneNumber.setText(phoneNumber);
+//        } else {
+//            this.textPhoneNumber.setText("");
+//        }
 
         // Image
-        String imageURL;
-        if (from != null && !from.trim().equals("")) {
-            imageURL = PreferencesUtils.getInstance(this).findPhotoURL(from);
-        } else {
-            imageURL = (String) call.get("toPhotoURL");
-        }
+        Picasso.get().load("https://stonegatesl.com/wp-content/uploads/2021/01/avatar-300x300.jpg").into(this.image);
 
-        if (imageURL != null && !imageURL.trim().equals("")) {
-            Picasso.get().load(imageURL).into(this.image);
-        } else {
-            Picasso.get().load("https://stonegatesl.com/wp-content/uploads/2021/01/avatar-300x300.jpg").into(this.image);
-        }
+//        String imageURL = null;
+//        if (from != null && !from.trim().equals("")) {
+//            imageURL = PreferencesUtils.getInstance(this).findPhotoURL(from);
+//        } else {
+//            imageURL = (String) call.get("toPhotoURL");
+//        }
+
+//        if (imageURL != null && !imageURL.trim().equals("")) {
+//            Picasso.get().load(imageURL).into(this.image);
+//        } else {
+//            Picasso.get().load("https://stonegatesl.com/wp-content/uploads/2021/01/avatar-300x300.jpg").into(this.image);
+//        }
 
         // Timer
         if (status != null && status.equals("callConnected")) {
@@ -469,33 +522,33 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
         return new Call.Listener() {
             @Override
             public void onConnectFailure(@NonNull Call call, @NonNull CallException callException) {
-                updateCallDetails(null);
+                updateCallDetails();
                 close();
             }
 
             @Override
             public void onRinging(@NonNull Call call) {
-                updateCallDetails(null);
+                updateCallDetails();
             }
 
             @Override
             public void onConnected(@NonNull Call call) {
-                updateCallDetails(null);
+                updateCallDetails();
             }
 
             @Override
             public void onReconnecting(@NonNull Call call, @NonNull CallException callException) {
-                updateCallDetails(null);
+                updateCallDetails();
             }
 
             @Override
             public void onReconnected(@NonNull Call call) {
-                updateCallDetails(null);
+                updateCallDetails();
             }
 
             @Override
             public void onDisconnected(@NonNull Call call, @Nullable CallException callException) {
-                updateCallDetails(null);
+                updateCallDetails();
                 close();
             }
         };
