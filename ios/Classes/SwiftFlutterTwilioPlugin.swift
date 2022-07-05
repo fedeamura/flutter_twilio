@@ -710,7 +710,7 @@ extension SwiftFlutterTwilioPlugin : PKPushRegistryDelegate {
         }
         
         self.deviceTokenString = credentials.token
-        let deviceToken = deviceTokenString?.reduce("", {$0 + String(format: "%02X", $1) })
+        let deviceToken = deviceTokenString.map { String(format: "%02x", $0) }.joined()
         NSLog("Device token \(String(describing: deviceToken))")
     }
     

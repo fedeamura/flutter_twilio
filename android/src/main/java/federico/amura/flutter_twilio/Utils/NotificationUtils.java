@@ -64,12 +64,13 @@ public class NotificationUtils {
                         Intent.FLAG_ACTIVITY_MULTIPLE_TASK |
                         Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
         );
+
         @SuppressLint("UnspecifiedImmutableFlag")
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 context,
                 0,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_UPDATE_CURRENT| PendingIntent.FLAG_IMMUTABLE
         );
 
 
@@ -82,19 +83,19 @@ public class NotificationUtils {
                 context,
                 0,
                 rejectIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_UPDATE_CURRENT| PendingIntent.FLAG_IMMUTABLE
         );
 
         // Accept intent
-        Intent acceptIntent = new Intent(context, IncomingCallNotificationService.class);
+        Intent acceptIntent = new Intent(context, BackgroundCallJavaActivity.class);
         acceptIntent.setAction(TwilioConstants.ACTION_ACCEPT);
         acceptIntent.putExtra(TwilioConstants.EXTRA_INCOMING_CALL_INVITE, callInvite);
         @SuppressLint("UnspecifiedImmutableFlag")
-        PendingIntent piAcceptIntent = PendingIntent.getService(
+        PendingIntent piAcceptIntent = PendingIntent.getActivity(
                 context,
                 0,
                 acceptIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_UPDATE_CURRENT| PendingIntent.FLAG_IMMUTABLE
         );
 
         // Notification
