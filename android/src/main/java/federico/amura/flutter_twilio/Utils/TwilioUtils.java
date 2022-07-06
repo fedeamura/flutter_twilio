@@ -143,6 +143,16 @@ public class TwilioUtils {
         this.activeCall = Voice.connect(this.context, connectOptions, getCallListener(listener));
     }
 
+    public void sendDigits(String digit){
+        if (this.activeCall != null) {
+            Log.i(TAG, "sending digit: " + digit);
+            this.activeCall.sendDigits(digit);
+            Log.i(TAG, "digit sent: ");
+        }else   {
+            Log.i(TAG, "Error sending digits, no active call");
+        }
+    }
+
     public void acceptInvite(CallInvite callInvite, Call.Listener listener) {
         if (this.activeCall != null) {
             throw new RuntimeException("There is a call in progress");

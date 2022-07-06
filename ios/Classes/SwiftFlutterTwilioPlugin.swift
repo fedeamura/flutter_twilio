@@ -408,8 +408,8 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
             callResult["speaker"] = false
         }
 
-        if self.callInvite != nill {
-            callResult["customParameters"] = self.callInvite.customParameters
+        if self.callInvite != nil {
+            callResult["customParameters"] = self.callInvite?.customParameters
         }
 
         callResult["toDisplayName"] = self.getToDisplayName()
@@ -710,7 +710,7 @@ extension SwiftFlutterTwilioPlugin : PKPushRegistryDelegate {
         }
         
         self.deviceTokenString = credentials.token
-        let deviceToken = deviceTokenString.map { String(format: "%02x", $0) }.joined()
+        let deviceToken = deviceTokenString.map { String(format: "%02x", $0 as CVarArg) }.joined()
         NSLog("Device token \(String(describing: deviceToken))")
     }
     
