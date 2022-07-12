@@ -230,6 +230,15 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
             result("")
             return
         }
+        if flutterCall.method == "sendDigits"
+        {
+            guard let digits = arguments?["digits"] as? String else {return}
+
+            self.sendDigits(digits: digits)
+            result("")
+            return
+
+        }
         
     
     }
@@ -710,7 +719,7 @@ extension SwiftFlutterTwilioPlugin : PKPushRegistryDelegate {
         }
         
         self.deviceTokenString = credentials.token
-        let deviceToken = deviceTokenString.map { String(format: "%02x", $0 as CVarArg) }.joined()
+        let deviceToken = deviceTokenString?.reduce("", {$0 + String(format: "%02X", $1) })
         NSLog("Device token \(String(describing: deviceToken))")
     }
     
@@ -919,6 +928,10 @@ extension SwiftFlutterTwilioPlugin : CallDelegate {
 //             NSLog("Yo inicie el hang up, entonces no corto el call kit desde aca")
 //         }
         callDisconnected(id: call.uuid!, error: nil)
+    }
+
+    public func sendDigits (digits: String) {
+        self.call?.sendDigits(digits)
     }
 }
 
