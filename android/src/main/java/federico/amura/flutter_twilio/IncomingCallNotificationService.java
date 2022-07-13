@@ -75,6 +75,12 @@ public class IncomingCallNotificationService extends Service {
         }
 
         Log.i(TAG, "Incoming call. App visible: " + isAppVisible() + ". Locked: " + isLocked());
+
+        if (TwilioUtils.getInstance(this).getActiveCall() != null) {
+            Log.i(TAG, "Incoming call. There is already an active call");
+            return;
+        }
+
         this.startServiceIncomingCall(callInvite);
     }
 
