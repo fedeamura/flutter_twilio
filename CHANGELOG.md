@@ -1,3 +1,7 @@
+## 0.0.16 - 2022-06-13
+* Fix crash on Android 12
+* Added send digit feature
+
 ## 0.0.15 - 2022-03-02
 * Rework
 
