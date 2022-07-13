@@ -209,6 +209,18 @@ public class FlutterTwilioPlugin implements
             }
             break;
 
+            case "sendDigits": {
+                try {
+                    String digits = call.argument("digits");
+                    twilioUtils.sendDigits(digits);
+                    result.success("");
+                } catch (Exception exception) {
+                    exception.printStackTrace();
+                    result.error("", "", "");
+                }
+            }
+            break;
+
             case "isSpeaker": {
                 try {
                     boolean isSpeaker = twilioUtils.isSpeaker();

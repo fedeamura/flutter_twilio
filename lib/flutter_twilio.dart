@@ -79,6 +79,13 @@ class FlutterTwilio {
     await _channel.invokeMethod('hangUp');
   }
 
+  static Future<void> sendDigits(String digits) async {
+    final args = <String, Object>{
+      "digits": digits,
+    };
+    await _channel.invokeMethod('sendDigits', args);
+  }
+
   static Future<void> register({
     required String identity,
     required String accessToken,

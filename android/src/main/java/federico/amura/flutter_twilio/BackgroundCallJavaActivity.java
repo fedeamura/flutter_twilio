@@ -379,7 +379,6 @@ public class BackgroundCallJavaActivity extends AppCompatActivity implements Sen
 
     private void updateCallDetails() {
         HashMap<String, Object> call = TwilioUtils.getInstance(this).getCallDetails();
-
         String status = (String) call.get("status");
         if (status != null && !status.trim().equals("")) {
             switch (status) {

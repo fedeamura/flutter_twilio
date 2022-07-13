@@ -230,6 +230,15 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
             result("")
             return
         }
+        if flutterCall.method == "sendDigits"
+        {
+            guard let digits = arguments?["digits"] as? String else {return}
+
+            self.sendDigits(digits: digits)
+            result("")
+            return
+
+        }
         
     
     }
@@ -408,8 +417,8 @@ public class SwiftFlutterTwilioPlugin: NSObject, FlutterPlugin,   NotificationDe
             callResult["speaker"] = false
         }
 
-        if self.callInvite != nill {
-            callResult["customParameters"] = self.callInvite.customParameters
+        if self.callInvite != nil {
+            callResult["customParameters"] = self.callInvite?.customParameters
         }
 
         callResult["toDisplayName"] = self.getToDisplayName()
@@ -919,6 +928,10 @@ extension SwiftFlutterTwilioPlugin : CallDelegate {
 //             NSLog("Yo inicie el hang up, entonces no corto el call kit desde aca")
 //         }
         callDisconnected(id: call.uuid!, error: nil)
+    }
+
+    public func sendDigits (digits: String) {
+        self.call?.sendDigits(digits)
     }
 }
 
